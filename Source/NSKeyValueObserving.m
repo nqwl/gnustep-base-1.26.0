@@ -231,7 +231,7 @@ setup()
   void		(*imp)(id,SEL,id,id);
 
   imp = (void (*)(id,SEL,id,id))[c instanceMethodForSelector: _cmd];
-
+  //可以作为setValue: forKey会调用willChangeValueForKey和didChangeValueForKey的佐证
   if ([[self class] automaticallyNotifiesObserversForKey: aKey])
     {
       [self willChangeValueForKey: aKey];

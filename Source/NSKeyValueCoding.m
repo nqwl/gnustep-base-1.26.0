@@ -90,7 +90,7 @@ SetValueForKey(NSObject *self, id anObject, const char *key, unsigned size)
       char		buf[size + 6];
       char		lo;
       char		hi;
-
+      //C 库函数 char *strncpy(char *dest, const char *src, size_t n) 把 src 所指向的字符串复制到 dest，最多复制 n 个字符。当 src 的长度小于 n 时，dest 的剩余部分将用空字节填充。
       strncpy(buf, "_set", 4);
       strncpy(&buf[4], key, size);
       lo = buf[4];
@@ -99,6 +99,7 @@ SetValueForKey(NSObject *self, id anObject, const char *key, unsigned size)
       buf[size + 4] = ':';
       buf[size + 5] = '\0';
 
+      //到这时buf里面存的字符串是_setKey:，下面遇到的 &buf[1]，buf分别代表setKey:，_setKey:
       name = &buf[1];	// setKey:
       type = NULL;
       sel = sel_getUid(name);
@@ -109,14 +110,17 @@ SetValueForKey(NSObject *self, id anObject, const char *key, unsigned size)
 	  if (sel == 0 || [self respondsToSelector: sel] == NO)
 	    {
 	      sel = 0;
+            //此处判断：是否可以直接访问实例变量，英语重要性
 	      if ([[self class] accessInstanceVariablesDirectly] == YES)
 		{
+            //清0 buf，lo = key
 		  buf[size + 4] = '\0';
 		  buf[3] = '_';
 		  buf[4] = lo;
 		  name = &buf[3];	// _key
 		  if (GSObjCFindVariable(self, name, &type, &size, &off) == NO)
 		    {
+                //hi = Key
 		      buf[4] = hi;
 		      buf[3] = 's';
 		      buf[2] = 'i';
@@ -140,6 +144,7 @@ SetValueForKey(NSObject *self, id anObject, const char *key, unsigned size)
 			}
 		    }
 		}
+        //其中任何一次找到key，都会调用GSObjCFindVariable，实现赋值操作。
 	    }
 	  else
 	    {
@@ -373,6 +378,7 @@ static id ValueForKey(NSObject *self, const char *key, unsigned size)
 
 - (void) setValue: (id)anObject forKeyPath: (NSString*)aKey
 {
+    //以.切割keyPath，递归调用setValue:forKeyPath:方法逐步递归取值，知道最后不能再递归就赋值
   NSRange       r = [aKey rangeOfString: @"." options: NSLiteralSearch];
 #ifdef WANT_DEPRECATED_KVC_COMPAT
   IMP	        o = [self methodForSelector: @selector(takeValue:forKeyPath:)];
